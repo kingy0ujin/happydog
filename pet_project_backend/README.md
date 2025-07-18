@@ -153,3 +153,140 @@ API로 데이터가 들어오고 나갈 때, 모든 관문을 지키는 **'입�
 백그라운드 작업: 서버는 뒤에서 조용히 7번 고객의 업무(DALL-E API 호출, 이미지 생성)를 처리합니다. 사용자는 그동안 다른 기능을 자유롭게 이용할 수 있습니다.
 
 결과 확인: 사용자의 앱은 잠시 후, "7번 고객님 업무 끝났나요?" 라고 서버에 물어봅니다. 작업이 완료되었다면, 완성된 이미지 주소를 전달하고 사용자는 만화를 볼 수 있습니다.
+
+
+
+
+
+
+
+
+
+
+<h1>Pet Project Backend: Technical Onboarding (v2.0)</h1>
+1. Preamble
+본 문서는 "Pet Project Backend"의 시스템 아키텍처, 설계 원칙, 그리고 표준 개발 워크플로우를 정의하는 기술 온보딩 가이드입니다. 모든 팀원은 본 문서를 숙지하여 프로젝트의 기술적 컨텍스트를 이해하고, 일관된 코드 품질 및 개발 생산성을 유지해야 합니다.
+
+본 프로젝트는 Flask 기반의 모놀리식(Monolithic) 아키텍처를 채택하되, 내부적으로는 계층화된 설계(Layered Architecture)와 모듈화를 통해 시스템의 각 컴포넌트가 높은 응집도와 낮은 결합도를 갖도록 설계되었습니다. 핵심 설계 철학은 **'관심사의 분리(Separation of Concerns)'**이며, 이는 애플리케이션 로직(app)과 머신러닝 로직(ml_models)의 물리적 분리에서 명확히 드러납니다.
+
+2. Environment Setup & Configuration
+로컬 개발 환경을 구성하기 위한 절차입니다.
+
+2.1. Prerequisites
+Git
+
+Anaconda or Miniconda
+
+2.2. Initial Setup
+Clone Repository
+
+git clone <repository_url>
+cd pet_project_backend
+
+Conda Environment Creation
+
+[Critical] environment.yml의 prefix 필드는 환경 생성자의 로컬 경로를 포함하므로, 공유 시 충돌을 유발합니다. conda env create 실행 전, 파일 하단의 prefix: 라인을 반드시 삭제하십시오.
+```
+# 1. (If exists) Remove the 'prefix' line from environment.yml
+# 2. Create the environment
+conda env create -f environment.yml
+
+Activate Environment
+
+conda activate pet_project_backend
+```
+Configure Environment Variables
+.env.example 파일을 복제하여 .env 파일을 생성하고, 로컬 환경에 맞게 변수들을 설정합니다. 이 파일은 Git에서 추적하지 않습니다(untracked).
+```
+cp .env.example .env
+```
+Place Service Account Key
+팀 리드로부터 전달받은 Firebase Service Account Key(.json)를 secrets/ 디렉토리 내에 위치시킵니다. 이 디렉토리 역시 Git에서 추적하지 않습니다.
+
+Launch Development Server
+```
+python run.py
+```
+서버가 0.0.0.0:5000에서 정상적으로 실행되면 초기 설정이 완료된 것입니다.
+
+3. System Architecture
+3.1. High-Level Overview
+본 시스템은 두 개의 핵심 컴포넌트로 구성됩니다.
+
+Application Core (app/): Flask 기반의 웹 애플리케이션으로, API 엔드포인트 제공, 비즈니스 로직 처리, 데이터 영속성 관리 등 핵심적인 백엔드 기능을 수행합니다.
+
+ML Engine (ml_models/): 머신러닝 모델의 추론 및 관련 스크립트를 관리하는 독립된 파이썬 패키지입니다. Application Core에 의해 호출되지만, 반대 방향의 의존성은 존재하지 않아 ML 관련 코드의 독립적인 개발 및 테스트를 보장합니다.
+
+3.2. Application Core (app/) Deep Dive
+3.2.1. Request Lifecycle
+클라이언트의 HTTP 요청은 다음과 같은 계층을 순차적으로 통과합니다.
+Client -> WSGI Server -> Flask App -> Blueprint (routes.py) -> Service Layer -> Model/Schema Layer -> Database
+
+3.2.2. Application Factory (app/__init__.py)
+본 프로젝트는 애플리케이션 팩토리(Application Factory) 패턴을 사용합니다. create_app() 함수는 애플리케이션의 인스턴스화 및 초기 설정을 담당하는 유일한 진입점입니다.
+
+목적:
+
+순환 참조 방지 (Circular Import Prevention): 앱 객체를 먼저 생성하고, 이후에 블루프린트나 확장 기능들을 등록함으로써 모듈 간의 순환 참조 문제를 원천적으로 방지합니다.
+
+동적 설정 주입 (Dynamic Configuration): 테스트, 개발, 운영 등 다양한 환경에 맞는 설정을 동적으로 주입하여 유연한 애플리케이션 인스턴스 생성을 가능하게 합니다.
+
+의존성 관리: Flask 확장 기능(extensions)과 블루프린트를 체계적으로 등록하고 관리합니다.
+
+3.2.3. Directory Structure & Responsibilities
+```
+/app
+|-- /api/         # Presentation Layer: 기능 도메인별 Blueprint 관리
+|-- /core/        # Core Logic: 인증, 설정 등 프로젝트 전반의 핵심 로직
+|-- /models/      # Data Model Layer: 데이터베이스 스키마(구조) 정의
+|-- /schemas/     # Data Transfer Object (DTO) & Validation Layer
+|-- /services/    # Shared Infrastructure Service Layer
+`-- __init__.py   # Application Factory
+```
+/api: 각 하위 디렉토리는 하나의 기능 도메인(e.g., pets, auth)을 나타내는 Blueprint입니다. routes.py는 해당 도메인의 API 엔드포인트와 HTTP 메서드를 정의합니다.
+
+/services: 공유 인프라 서비스를 정의합니다. firebase_service.py와 같이 여러 도메인에서 공통으로 사용되는 저수준(low-level)의 비즈니스 로직이나 외부 서비스와의 연동을 담당합니다.
+
+/api/{domain}/services.py: 도메인 특화 서비스를 정의합니다. 특정 도메인에 강하게 결합된 비즈니스 로직을 포함합니다. 예를 들어, pets/services.py는 반려동물 프로필 생성과 관련된 복잡한 비즈니스 규칙을 처리합니다.
+
+/models: 데이터베이스 컬렉션과 필드를 클래스 형태로 정의합니다. 데이터의 영속적인 구조를 나타냅니다.
+
+/schemas: API의 요청(Request)과 응답(Response) 데이터 구조를 정의하고 유효성을 검증하는 DTO(Data Transfer Object) 계층입니다. Marshmallow와 같은 라이브러리를 사용하여 데이터 직렬화(Serialization) 및 역직렬화(Deserialization)를 수행합니다.
+
+4. Core Implementation Patterns
+4.1. Asynchronous Task Processing
+'만화 생성'과 같이 처리 시간이 긴(long-running) 작업은 사용자 경험(UX) 저하를 막기 위해 비동기적으로 처리됩니다.
+
+Request & Task Queuing: 클라이언트가 작업을 요청하면, 서버는 즉시 요청을 백그라운드 작업 큐(e.g., Celery, RQ)에 등록하고, 추적 가능한 task_id를 즉시 반환합니다.
+
+Background Execution: 별도의 Worker 프로세스가 큐에서 작업을 가져와 외부 API 호출, 이미지 생성 등의 무거운 로직을 수행합니다.
+
+Polling & Result Retrieval: 클라이언트는 발급받은 task_id를 이용해 주기적으로(polling) 작업 상태를 확인하는 엔드포인트를 호출하고, 작업 완료 시 최종 결과(이미지 URL 등)를 수신합니다.
+
+4.2. High-Performance Similarity Search (Faiss)
+'비문 분석' 기능은 대규모 벡터 데이터셋에서 유사 벡터를 효율적으로 검색하기 위해 Faiss를 활용합니다.
+
+Offline Indexing: ml_models/scripts/의 스크립트를 통해 사전에 등록된 모든 비문 이미지의 특징 벡터를 추출하고, 이를 검색에 최적화된 Faiss 인덱스 파일로 구축합니다.
+
+In-Memory Search: 애플리케이션 서버는 시작 시 이 인덱스 파일을 메모리에 로드합니다.
+
+Online Querying: 사용자 요청이 들어오면, 입력 이미지의 벡터를 추출한 뒤 전체 DB를 스캔하는 대신 메모리에 있는 인덱스에 질의(query)하여 k-NN(k-Nearest Neighbors) 탐색을 압도적으로 빠른 속도로 수행합니다.
+
+5. Development Workflow
+5.1. Git Branching Strategy
+본 프로젝트는 Git Flow의 원칙을 따릅니다.
+
+main: 배포 가능한 프로덕션 코드만 포함합니다.
+
+develop: 다음 릴리즈를 위한 개발의 통합 브랜치입니다.
+
+feature/{feature-name}: 신규 기능 개발을 위한 브랜치입니다. develop 브랜치에서 분기하며, 개발 완료 후 develop으로 Pull Request를 생성합니다.
+
+5.2. Pull Request & Code Review
+모든 코드는 develop 브랜치로 머지되기 전, 동료의 코드 리뷰를 거쳐야 합니다. PR은 최소 1명 이상의 승인(Approve)을 받아야 머지될 수 있습니다.
+
+5.3. Dependency Management
+새로운 라이브러리 추가 시, conda install <package_name>으로 설치 후 반드시 environment.yml 파일을 업데이트해야 합니다.
+```
+명령어: conda env export --no-builds > environment.yml
+```
