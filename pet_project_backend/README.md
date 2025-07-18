@@ -16,7 +16,7 @@ Git 저장소에서 프로젝트를 로컬 컴퓨터로 복제합니다.
 environment.yml 파일은 팀원들의 개발 환경을 통일하기 위한 중요한 파일이지만, 생성한 사람의 개인 컴퓨터 경로가 기록되어 있을 수 있습니다.
 
 conda env create 명령어를 실행하기 전, 반드시 environment.yml 파일을 텍스트 편집기로 열어 맨 아래에 있는 prefix: 로 시작하는 줄을 찾아 삭제해주세요.
-
+```
 name: pet_project_backend
 channels:
   - defaults
@@ -25,18 +25,18 @@ dependencies:
   - flask
   - ... (기타 라이브러리)
 prefix: C:\Users\jeongho\anaconda3\envs\pet_project_backend  # <-- 이 줄을 반드시 삭제!
-
+```
 이 prefix 줄을 삭제해야만, 각 팀원의 컴퓨터 환경에 맞는 올바른 경로에 가상환경이 성공적으로 설치됩니다.
 
 이제 아래 명령어를 실행하여 Anaconda 가상환경을 생성합니다.
-
+```
 conda env create -f environment.yml
-
+```
 3. 가상환경 활성화
 아래 명령어로 생성된 가상환경에 진입합니다.
-
+```
 conda activate pet_project_backend
-
+```
 4. .env 파일 설정
 프로젝트 루트에 있는 .env.example 파일을 복사하여 .env 파일을 생성한 뒤, 내부의 값들을 자신의 개발 환경에 맞게 채워 넣습니다. 이 파일은 민감한 정보를 담고 있으므로 Git에 포함되지 않습니다.
 
@@ -45,14 +45,14 @@ conda activate pet_project_backend
 
 6. 서버 실행
 모든 설정이 완료되면, 아래 명령어로 개발용 애플리케이션 서버를 실행합니다.
-
+```
 python run.py
-
+```
 서버가 정상적으로 실행되면, 이제 코드 개발을 시작할 준비가 된 것입니다.
 
 2. 프로젝트 폴더 구조
 프로젝트의 전체 폴더 구조는 다음과 같으며, 실제 개발 현황을 정확하게 반영합니다.
-
+```
 /pet_project_backend/
 |
 |-- /app/                        # Flask 애플리케이션 코어
@@ -75,6 +75,7 @@ python run.py
 |-- .env                         # 환경변수
 |-- .gitignore                   # Git 추적 제외 목록
 |-- environment.yml              # Conda 환경 설정 파일
+```
 
 3. 프로젝트의 심장, app/__init__.py 파헤치기 (가장 중요한 파일!)
 이 프로젝트의 구조를 이해하려면 app/__init__.py 파일의 역할을 아는 것이 가장 중요합니다. 이 파일이 없다면, 각 기능들은 뿔뿔이 흩어진 부품에 불과합니다. 이 파일은 **'앱 조립 공장의 총괄 공장장'**과 같습니다.
