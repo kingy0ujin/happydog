@@ -67,16 +67,16 @@ Git으로 공유되지 않는 민감한 파일들은 아래의 안내에 따라 
 1.  **라이브러리 설치:** 현재 활성화된 가상환경에 필요한 라이브러리를 설치합니다.
 
     ```bash
-    conda install <package_name>
-    # 또는 pip install <package_name>
+    conda install -c conda-forge <package_name>  최우선
+    conda install <package_name> 우선
+    # 또는 pip install <package_name> 쩔수
     ```
 
 2.  **environment.yml 파일 업데이트:** 아래 명령어를 실행하여 현재 환경의 패키지 목록을 `environment.yml` 파일에 덮어씁니다.
 
-    > **[수정]** `--no-builds` 대신 `--from-history` 플래그 사용을 표준으로 합니다. 이 방식은 사용자가 직접 설치한 핵심 라이브러리 목록만 기록하여, 다른 운영체제(Windows, Mac) 간의 호환성을 높여줍니다.
 
     ```bash
-    conda env export --from-history > environment.yml
+    conda env export --no-builds > environment.yml
     ```
 
 3.  **커밋 및 푸시:** 변경된 `environment.yml` 파일을 커밋하고 푸시하여 팀원들에게 공유합니다. 다른 팀원들은 `conda env update --file environment.yml --prune` 명령으로 자신의 환경을 업데이트할 수 있습니다.
