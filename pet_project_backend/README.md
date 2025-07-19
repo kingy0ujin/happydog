@@ -1,292 +1,419 @@
-Pet Project Backend: 팀 온보딩 가이드
-시작하며
-안녕하세요, 팀원 여러분. 이 문서는 우리 "Pet Project Backend"의 전체적인 설계와 폴더 구조를 설명하는 온보딩 가이드입니다. 협업이 처음이거나 앱 개발이 익숙하지 않은 분들도 이 문서 하나로 프로젝트의 전체 그림을 이해하고, 자신감 있게 개발에 참여하는 것을 목표로 합니다.
+### **Pet Project Backend: 최종 가이드**
 
-우리 프로젝트의 핵심 설계 원칙은 **'역할과 책임의 명확한 분리'**입니다. 사용자의 요청을 처리하는 app 폴더와 인공지능 모델을 담당하는 ml_models 폴더로 작업 영역을 나누었습니다. 이를 통해 특정 기능(예: API 개발 또는 모델 최적화)에 집중할 때 다른 영역의 코드에 미치는 영향을 최소화하고, 각자 독립적인 개발 흐름을 유지할 수 있도록 돕습니다.
+#### **1. 프로젝트 개요 및 아키텍처**
 
-1. 프로젝트 시작하기 (Getting Started)
-새로운 팀원이 가장 먼저 수행해야 할 작업 순서입니다.
+본 문서는 "Pet Project Backend"의 시스템 아키텍처, 설계 원칙, 그리고 표준 개발 워크플로우를 정의하는 기술 가이드입니다.
 
-1. 프로젝트 복제 (Clone)
-Git 저장소에서 프로젝트를 로컬 컴퓨터로 복제합니다.
+본 프로젝트는 Python Flask를 기반으로 하며, 애플리케이션 팩토리(Application Factory) 패턴과 \*\*블루프린트(Blueprint)\*\*를 활용하여 기능별 모듈화를 지향합니다. 핵심 설계 철학은 \*\*'관심사의 분리(Separation of Concerns)'\*\*로, 모든 코드는 명확한 역할과 책임을 가지는 계층으로 분리됩니다.
 
-2. 가상환경 생성
-⚠️ 중요: environment.yml 파일 수정하기
+-----
 
-environment.yml 파일은 팀원들의 개발 환경을 통일하기 위한 중요한 파일이지만, 생성한 사람의 개인 컴퓨터 경로가 기록되어 있을 수 있습니다.
+#### **2. 로컬 개발 환경 설정**
 
-conda env create 명령어를 실행하기 전, 반드시 environment.yml 파일을 텍스트 편집기로 열어 맨 아래에 있는 prefix: 로 시작하는 줄을 찾아 삭제해주세요.
-```
-name: pet_project_backend
-channels:
-  - defaults
-dependencies:
-  - python=3.9
-  - flask
-  - ... (기타 라이브러리)
-prefix: C:\Users\jeongho\anaconda3\envs\pet_project_backend  # <-- 이 줄을 반드시 삭제!
-```
-이 prefix 줄을 삭제해야만, 각 팀원의 컴퓨터 환경에 맞는 올바른 경로에 가상환경이 성공적으로 설치됩니다.
+##### **2.1. 사전 준비**
 
-이제 아래 명령어를 실행하여 Anaconda 가상환경을 생성합니다.
-```
-conda env create -f environment.yml
-```
-3. 가상환경 활성화
-아래 명령어로 생성된 가상환경에 진입합니다.
-```
-conda activate pet_project_backend
-```
-4. .env 파일 설정
-프로젝트 루트에 있는 .env.example 파일을 복사하여 .env 파일을 생성한 뒤, 내부의 값들을 자신의 개발 환경에 맞게 채워 넣습니다. 이 파일은 민감한 정보를 담고 있으므로 Git에 포함되지 않습니다.
+  * Git
+  * Anaconda or Miniconda
 
-5. 비밀 키 파일 배치
-팀 리드로부터 전달받은 Firebase 서비스 계정 키(.json) 파일을 /secrets 폴더 안에 위치시킵니다.
+##### **2.2. 초기 설정 절차**
 
-6. 서버 실행
-모든 설정이 완료되면, 아래 명령어로 개발용 애플리케이션 서버를 실행합니다.
-```
-python run.py
-```
-서버가 정상적으로 실행되면, 이제 코드 개발을 시작할 준비가 된 것입니다.
+1.  **리포지토리 복제 (Clone)**
 
-2. 프로젝트 폴더 구조
-프로젝트의 전체 폴더 구조는 다음과 같으며, 실제 개발 현황을 정확하게 반영합니다.
+    ```bash
+    git clone <repository_url>
+    cd pet_project_backend
+    ```
+
+2.  **Conda 가상환경 생성**
+
+      * ⚠️ **중요: `environment.yml` 파일 수정**
+        `conda env create` 명령어를 실행하기 전, 반드시 `environment.yml` 파일을 텍스트 편집기로 열어 맨 아래에 있는 `prefix:` 로 시작하는 줄을 찾아 **삭제**해주세요. 이 줄은 환경을 생성한 사람의 개인 컴퓨터 경로이므로, 삭제해야만 각 팀원의 환경에 맞게 설치됩니다.
+
+    <!-- end list -->
+
+    ```bash
+    conda env create -f environment.yml
+    ```
+
+3.  **가상환경 활성화**
+
+    ```bash
+    conda activate pet_project_backend
+    ```
+
+##### **2.3. 비밀 파일 설정 (`.env` 및 `secrets`)**
+
+Git으로 공유되지 않는 민감한 파일들은 아래의 안내에 따라 설정해야 합니다.
+
+1.  **.env 파일 생성**
+    프로젝트 최상위 폴더의 `.env.example` 파일을 복사하여 `.env` 파일을 새로 만듭니다.
+    `.env` 파일 안의 변수들을 자신의 로컬 환경에 맞게 수정합니다. `FLASK_ENV`, `JWT_SECRET_KEY` 등 팀 공용으로 사용하는 값은 팀 리드에게 문의하세요.
+
+2.  **secrets 폴더 내 키 파일 배치**
+    팀 리드로부터 보안 채널(슬랙 DM 등)을 통해 아래의 키 파일들을 전달받습니다.
+
+      * `your-dev-firebase-key.json` (개발용 Firebase 키)
+      * `your-test-firebase-key.json` (테스트용 Firebase 키)
+      * `your_google_client_secret.json` (Google OAuth용 클라이언트 키)
+
+    전달받은 파일들을 `pet_project_backend/secrets/` 폴더 안에 저장합니다. `.env` 파일에 작성된 경로와 파일명이 일치해야 합니다.
+
+-----
+
+#### **3. 의존성 관리: 라이브러리 추가 및 공유**
+
+개발 중 새로운 라이브러리를 설치한 경우, 반드시 다음 절차를 따라 팀원 전체에 공유해야 합니다.
+
+1.  **라이브러리 설치:** 현재 활성화된 가상환경에 필요한 라이브러리를 설치합니다.
+
+    ```bash
+    conda install <package_name>
+    # 또는 pip install <package_name>
+    ```
+
+2.  **environment.yml 파일 업데이트:** 아래 명령어를 실행하여 현재 환경의 패키지 목록을 `environment.yml` 파일에 덮어씁니다.
+
+    > **[수정]** `--no-builds` 대신 `--from-history` 플래그 사용을 표준으로 합니다. 이 방식은 사용자가 직접 설치한 핵심 라이브러리 목록만 기록하여, 다른 운영체제(Windows, Mac) 간의 호환성을 높여줍니다.
+
+    ```bash
+    conda env export --from-history > environment.yml
+    ```
+
+3.  **커밋 및 푸시:** 변경된 `environment.yml` 파일을 커밋하고 푸시하여 팀원들에게 공유합니다. 다른 팀원들은 `conda env update --file environment.yml --prune` 명령으로 자신의 환경을 업데이트할 수 있습니다.
+
+-----
+
+#### **4. 프로젝트 구조 해설**
+
 ```
 /pet_project_backend/
 |
 |-- /app/                        # Flask 애플리케이션 코어
-|   |-- /api/                    # 기능별 API 경로 (블루프린트)
-|   |-- /core/                   # 공통 핵심 모듈 (설정, 보안)
-|   |-- /models/                 # 데이터 구조 정의 (Firestore 문서)
-|   |-- /schemas/                # 데이터 유효성 검증 (API 입국 심사관)
-|   |-- /services/               # 여러 기능이 공유하는 공통 로직
-|   `-- __init__.py              # ✨ 앱을 조립하는 총괄 공장장
+|   |-- /api/                    # 기능별 API (블루프린트)
+|   |   |-- /auth/
+|   |   `-- /pets/
+|   |-- /core/                   # 핵심 공통 모듈 (설정, 보안)
+|   |-- /models/                 # 데이터 구조 정의 (데이터 클래스)
+|   |-- /schemas/                # 데이터 유효성 검증 및 직렬화 (Marshmallow)
+|   `-- __init__.py              # 애플리케이션 팩토리
 |
-|-- /ml_models/                  # 머신러닝 관련 코드
-|   |-- /inference/              # 모델 추론 로직
-|   |-- /saved_models/           # 학습된 모델 파일
-|   `-- /scripts/                # 모델 학습 등 오프라인 스크립트
+|-- /ml_models/                  # 머신러닝 관련 코드 (분리된 영역)
 |
-|-- /uploads/                    # 사용자 업로드 파일 임시 저장
-|-- /secrets/                    # Firebase 키 등 비밀 파일
+|-- /secrets/                    # Git 추적 제외된 비밀 키 파일 저장소
 |
 |-- run.py                       # 앱 서버 실행 스크립트
-|-- .env                         # 환경변수
+|-- .env                         # Git 추적 제외된 환경 변수 파일
+|-- .env.example                 # .env 파일의 템플릿
 |-- .gitignore                   # Git 추적 제외 목록
-|-- environment.yml              # Conda 환경 설정 파일
+`-- environment.yml              # Conda 환경 설정 파일
 ```
 
-3. 프로젝트의 심장, app/__init__.py 파헤치기 (가장 중요한 파일!)
-이 프로젝트의 구조를 이해하려면 app/__init__.py 파일의 역할을 아는 것이 가장 중요합니다. 이 파일이 없다면, 각 기능들은 뿔뿔이 흩어진 부품에 불과합니다. 이 파일은 **'앱 조립 공장의 총괄 공장장'**과 같습니다.
-
-run.py가 python run.py 명령으로 실행될 때, 가장 먼저 이 공장장을 찾아 create_app()이라는 조립 라인을 가동시킵니다. 조립 과정은 다음과 같습니다.
-
-1단계: 앱의 뼈대 만들기
-
-app = Flask(__name__) 코드를 통해 비어있는 플라스크(Flask) 앱 객체를 생성합니다. 이는 마치 레고를 조립하기 위해 가장 먼저 텅 빈 레고 판을 꺼내는 것과 같습니다.
-
-2단계: 설정 정보 주입하기 (설계도 읽기)
-
-config.py 파일에서 데이터베이스 주소, 비밀 키 같은 중요한 설정 정보들을 읽어와 앱에 등록합니다. 이제 우리 앱은 어떤 데이터베이스에 연결하고, 어떻게 보안을 유지해야 할지 알게 됩니다. 레고 조립 설명서를 읽고, 어떤 부품이 필요한지 파악하는 단계입니다.
-
-3단계: 기능별 부품(블루프린트) 등록하기
-
-이 단계가 가장 중요합니다. 공장장은 app/api 폴더를 쭉 둘러보며 auth, pets 등 각 기능 폴더 안에 있는 routes.py(기능별 설계도)를 하나씩 가져옵니다.
-
-그리고 app.register_blueprint() 명령으로 가져온 설계도들을 앱의 뼈대에 차곡차곡 연결하고, 각각의 주소(URL)를 부여합니다.
-
-이 과정을 통해, 흩어져 있던 '로그인 기능', '펫 등록 기능'들이 비로소 http://서버주소/auth/login, http://서버주소/pets 와 같은 실제 주소를 갖는 하나의 완성된 서비스로 합쳐집니다.
-
-4단계: 완성품 출하
-
-모든 조립이 끝나면, 공장장은 완성된 앱(app)을 run.py에게 돌려줍니다. run.py는 이 완성품을 받아 서버를 가동시켜 손님(클라이언트)을 맞이할 준비를 마칩니다.
-
-💡 왜 이렇게 복잡하게 '공장'처럼 만들까요?
-
-코드 꼬임 방지: 만약 pets 기능과 auth 기능이 서로를 필요로 할 때, 직접 불러오려고 하면 "누가 먼저냐" 문제가 생겨 코드가 엉망이 됩니다. 하지만 공장장이 앱을 먼저 만들고 나중에 둘을 조립하면, 이런 문제가 깔끔하게 해결됩니다. 이를 **'순환 참조 방지'**라고 합니다.
-
-4. /app 디렉토리 상세 분석: 애플리케이션의 심장부
-/api (API 계층: 기능별 독립 부서)
-외부 클라이언트의 모든 HTTP 요청을 기능별로 분리하여 처리하는 곳입니다. 각 기능 폴더는 하나의 독립적인 **'기능별 미니 앱(블루프린트)'**입니다.
-
-블루프린트(Blueprint)란?
-
-거대한 앱을 잘게 나눈 '기능 단위의 부품'입니다. '인사팀', '회계팀'처럼 각자 맡은 역할이 명확해서, 다른 팀에 신경 쓰지 않고 자신의 업무에만 집중할 수 있게 해줍니다.
-
-서비스 계층의 이중 구조: 전담 요리사와 공용 창고
-우리 프로젝트는 서비스 로직을 두 가지 형태로 관리하여 명확성과 재사용성을 모두 확보합니다.
-
-app/api/*/services.py (기능별 전담 요리사)
-
-오직 특정 기능 하나만을 위해 일하는 전문가입니다. pets/services.py는 '반려동물'과 관련된 요리(로직)만 담당합니다. 다른 기능에서는 이 요리사를 부르지 않습니다.
-
-/app/services/ (공용 재료 창고)
-
-모든 요리사가 함께 사용하는 재료 창고입니다. firebase_service.py는 Firestore 데이터베이스에 접근하는 방법을 제공하며, '사용자', '반려동물', '게시글' 등 모든 기능이 필요할 때마다 이 창고에서 재료(기능)를 가져다 씁니다.
-
-/schemas (API 입국 심사관)
-API로 데이터가 들어오고 나갈 때, 모든 관문을 지키는 **'입국 심사관'**입니다. 두 가지 중요한 임무를 수행합니다.
-
-들어올 때 (요청 데이터 검증): "이 데이터, 우리 시스템에 들어올 자격(올바른 형식)이 되나요?" 라며 데이터의 형식을 꼼꼼히 검사합니다. 형식이 틀리면 입장을 거부하여 시스템을 보호합니다.
-
-나갈 때 (응답 데이터 변환): "이 데이터, 외부 세계(클라이언트)가 이해할 수 있는 언어(JSON)로 번역되었나요?" 라며 우리 시스템의 데이터를 표준 언어인 JSON으로 깔끔하게 포장해서 내보냅니다.
-
-5. /ml_models 디렉토리 상세 분석: 독립적인 AI 엔진
-애플리케이션 서버(app)와 개발 관심사가 분리된 머신러닝 전용 공간입니다.
-
-/scripts: 모델 학습, 데이터 전처리 등 오프라인에서 실행하는 연구/개발용 스크립트를 보관합니다. python run.py와는 별개로, AI 담당자가 필요할 때 직접 실행하는 파일들입니다.
-
-6. 주요 기능 동작 원리 (쉬운 비유)
-비문 분석 로직 (Faiss 활용) - 도서관 색인 카드
-사전 준비 (오프라인): AI 담당자가 수많은 비문 데이터를 미리 분석해서, 어떤 비문이 어디에 있는지 알려주는 **'색인 카드(Index)'**를 만들어 둡니다. (책 전체를 읽지 않고 '찾아보기' 페이지만 만드는 것과 같습니다.)
-
-사용자 요청 (온라인): 사용자가 비문 사진을 보내면, 서버는 그 사진의 특징을 찾습니다.
-
-빠른 검색: 서버는 이 특징을 가지고 도서관 전체(모든 데이터)를 뒤지는 대신, 미리 만들어 둔 '색인 카드'만 보고 "이 특징과 가장 비슷한 비문은 3번 선반에 있습니다!" 라고 순식간에 결과를 찾아냅니다.
-
-멍스타그램 '만화 생성' 로직 (비동기 처리) - 은행 대기 번호표
-처리 시간이 긴 이 기능은 사용자를 하염없이 기다리게 하지 않습니다.
-
-작업 요청 및 즉시 응답: 사용자가 만화 생성을 요청하면, 서버는 바로 만화를 만들지 않습니다. 대신 "네, 접수되었습니다. 고객님 대기번호는 7번입니다" 라는 **'대기 번호표(작업 ID)'**만 즉시 발급하고 응답을 마칩니다.
-
-백그라운드 작업: 서버는 뒤에서 조용히 7번 고객의 업무(DALL-E API 호출, 이미지 생성)를 처리합니다. 사용자는 그동안 다른 기능을 자유롭게 이용할 수 있습니다.
-
-결과 확인: 사용자의 앱은 잠시 후, "7번 고객님 업무 끝났나요?" 라고 서버에 물어봅니다. 작업이 완료되었다면, 완성된 이미지 주소를 전달하고 사용자는 만화를 볼 수 있습니다.
-
-
-
-
-
-
-
-
-
-
-<h1>Pet Project Backend: Technical Onboarding (v2.0)</h1>
-1. Preamble
-본 문서는 "Pet Project Backend"의 시스템 아키텍처, 설계 원칙, 그리고 표준 개발 워크플로우를 정의하는 기술 온보딩 가이드입니다. 모든 팀원은 본 문서를 숙지하여 프로젝트의 기술적 컨텍스트를 이해하고, 일관된 코드 품질 및 개발 생산성을 유지해야 합니다.
-
-본 프로젝트는 Flask 기반의 모놀리식(Monolithic) 아키텍처를 채택하되, 내부적으로는 계층화된 설계(Layered Architecture)와 모듈화를 통해 시스템의 각 컴포넌트가 높은 응집도와 낮은 결합도를 갖도록 설계되었습니다. 핵심 설계 철학은 **'관심사의 분리(Separation of Concerns)'**이며, 이는 애플리케이션 로직(app)과 머신러닝 로직(ml_models)의 물리적 분리에서 명확히 드러납니다.
-
-2. Environment Setup & Configuration
-로컬 개발 환경을 구성하기 위한 절차입니다.
-
-2.1. Prerequisites
-Git
-
-Anaconda or Miniconda
-
-2.2. Initial Setup
-Clone Repository
-
-git clone <repository_url>
-cd pet_project_backend
-
-Conda Environment Creation
-
-[Critical] environment.yml의 prefix 필드는 환경 생성자의 로컬 경로를 포함하므로, 공유 시 충돌을 유발합니다. conda env create 실행 전, 파일 하단의 prefix: 라인을 반드시 삭제하십시오.
-```
-# 1. (If exists) Remove the 'prefix' line from environment.yml
-# 2. Create the environment
-conda env create -f environment.yml
-
-Activate Environment
-
-conda activate pet_project_backend
-```
-Configure Environment Variables
-.env.example 파일을 복제하여 .env 파일을 생성하고, 로컬 환경에 맞게 변수들을 설정합니다. 이 파일은 Git에서 추적하지 않습니다(untracked).
-```
-cp .env.example .env
-```
-Place Service Account Key
-팀 리드로부터 전달받은 Firebase Service Account Key(.json)를 secrets/ 디렉토리 내에 위치시킵니다. 이 디렉토리 역시 Git에서 추적하지 않습니다.
-
-Launch Development Server
-```
-python run.py
-```
-서버가 0.0.0.0:5000에서 정상적으로 실행되면 초기 설정이 완료된 것입니다.
-
-3. System Architecture
-3.1. High-Level Overview
-본 시스템은 두 개의 핵심 컴포넌트로 구성됩니다.
-
-Application Core (app/): Flask 기반의 웹 애플리케이션으로, API 엔드포인트 제공, 비즈니스 로직 처리, 데이터 영속성 관리 등 핵심적인 백엔드 기능을 수행합니다.
-
-ML Engine (ml_models/): 머신러닝 모델의 추론 및 관련 스크립트를 관리하는 독립된 파이썬 패키지입니다. Application Core에 의해 호출되지만, 반대 방향의 의존성은 존재하지 않아 ML 관련 코드의 독립적인 개발 및 테스트를 보장합니다.
-
-3.2. Application Core (app/) Deep Dive
-3.2.1. Request Lifecycle
-클라이언트의 HTTP 요청은 다음과 같은 계층을 순차적으로 통과합니다.
-Client -> WSGI Server -> Flask App -> Blueprint (routes.py) -> Service Layer -> Model/Schema Layer -> Database
-
-3.2.2. Application Factory (app/__init__.py)
-본 프로젝트는 애플리케이션 팩토리(Application Factory) 패턴을 사용합니다. create_app() 함수는 애플리케이션의 인스턴스화 및 초기 설정을 담당하는 유일한 진입점입니다.
-
-목적:
-
-순환 참조 방지 (Circular Import Prevention): 앱 객체를 먼저 생성하고, 이후에 블루프린트나 확장 기능들을 등록함으로써 모듈 간의 순환 참조 문제를 원천적으로 방지합니다.
-
-동적 설정 주입 (Dynamic Configuration): 테스트, 개발, 운영 등 다양한 환경에 맞는 설정을 동적으로 주입하여 유연한 애플리케이션 인스턴스 생성을 가능하게 합니다.
-
-의존성 관리: Flask 확장 기능(extensions)과 블루프린트를 체계적으로 등록하고 관리합니다.
-
-3.2.3. Directory Structure & Responsibilities
-```
-/app
-|-- /api/         # Presentation Layer: 기능 도메인별 Blueprint 관리
-|-- /core/        # Core Logic: 인증, 설정 등 프로젝트 전반의 핵심 로직
-|-- /models/      # Data Model Layer: 데이터베이스 스키마(구조) 정의
-|-- /schemas/     # Data Transfer Object (DTO) & Validation Layer
-|-- /services/    # Shared Infrastructure Service Layer
-`-- __init__.py   # Application Factory
-```
-/api: 각 하위 디렉토리는 하나의 기능 도메인(e.g., pets, auth)을 나타내는 Blueprint입니다. routes.py는 해당 도메인의 API 엔드포인트와 HTTP 메서드를 정의합니다.
-
-/services: 공유 인프라 서비스를 정의합니다. firebase_service.py와 같이 여러 도메인에서 공통으로 사용되는 저수준(low-level)의 비즈니스 로직이나 외부 서비스와의 연동을 담당합니다.
-
-/api/{domain}/services.py: 도메인 특화 서비스를 정의합니다. 특정 도메인에 강하게 결합된 비즈니스 로직을 포함합니다. 예를 들어, pets/services.py는 반려동물 프로필 생성과 관련된 복잡한 비즈니스 규칙을 처리합니다.
-
-/models: 데이터베이스 컬렉션과 필드를 클래스 형태로 정의합니다. 데이터의 영속적인 구조를 나타냅니다.
-
-/schemas: API의 요청(Request)과 응답(Response) 데이터 구조를 정의하고 유효성을 검증하는 DTO(Data Transfer Object) 계층입니다. Marshmallow와 같은 라이브러리를 사용하여 데이터 직렬화(Serialization) 및 역직렬화(Deserialization)를 수행합니다.
-
-4. Core Implementation Patterns
-4.1. Asynchronous Task Processing
-'만화 생성'과 같이 처리 시간이 긴(long-running) 작업은 사용자 경험(UX) 저하를 막기 위해 비동기적으로 처리됩니다.
-
-Request & Task Queuing: 클라이언트가 작업을 요청하면, 서버는 즉시 요청을 백그라운드 작업 큐(e.g., Celery, RQ)에 등록하고, 추적 가능한 task_id를 즉시 반환합니다.
-
-Background Execution: 별도의 Worker 프로세스가 큐에서 작업을 가져와 외부 API 호출, 이미지 생성 등의 무거운 로직을 수행합니다.
-
-Polling & Result Retrieval: 클라이언트는 발급받은 task_id를 이용해 주기적으로(polling) 작업 상태를 확인하는 엔드포인트를 호출하고, 작업 완료 시 최종 결과(이미지 URL 등)를 수신합니다.
-
-4.2. High-Performance Similarity Search (Faiss)
-'비문 분석' 기능은 대규모 벡터 데이터셋에서 유사 벡터를 효율적으로 검색하기 위해 Faiss를 활용합니다.
-
-Offline Indexing: ml_models/scripts/의 스크립트를 통해 사전에 등록된 모든 비문 이미지의 특징 벡터를 추출하고, 이를 검색에 최적화된 Faiss 인덱스 파일로 구축합니다.
-
-In-Memory Search: 애플리케이션 서버는 시작 시 이 인덱스 파일을 메모리에 로드합니다.
-
-Online Querying: 사용자 요청이 들어오면, 입력 이미지의 벡터를 추출한 뒤 전체 DB를 스캔하는 대신 메모리에 있는 인덱스에 질의(query)하여 k-NN(k-Nearest Neighbors) 탐색을 압도적으로 빠른 속도로 수행합니다.
-
-5. Development Workflow
-5.1. Git Branching Strategy
-본 프로젝트는 Git Flow의 원칙을 따릅니다.
-
-main: 배포 가능한 프로덕션 코드만 포함합니다.
-
-develop: 다음 릴리즈를 위한 개발의 통합 브랜치입니다.
-
-feature/{feature-name}: 신규 기능 개발을 위한 브랜치입니다. develop 브랜치에서 분기하며, 개발 완료 후 develop으로 Pull Request를 생성합니다.
-
-5.2. Pull Request & Code Review
-모든 코드는 develop 브랜치로 머지되기 전, 동료의 코드 리뷰를 거쳐야 합니다. PR은 최소 1명 이상의 승인(Approve)을 받아야 머지될 수 있습니다.
-
-5.3. Dependency Management
-새로운 라이브러리 추가 시, conda install <package_name>으로 설치 후 반드시 environment.yml 파일을 업데이트해야 합니다.
-```
-명령어: conda env export --no-builds > environment.yml
-```
+  * `run.py`: 애플리케이션 서버를 실행하는 유일한 진입점입니다.
+    ```python
+    # run.py
+    import os
+    from app import create_app # app 패키지로부터 create_app 함수를 가져옵니다.
+
+    # 1. 환경 변수 'FLASK_ENV'를 읽어와 현재 실행 환경을 결정합니다.
+    #    변수가 없으면 기본값으로 'development'를 사용합니다.
+    env = os.getenv('FLASK_ENV', 'development')
+
+    # 2. 결정된 환경(예: 'development')에 맞는 앱 인스턴스를 생성합니다.
+    app = create_app(env)
+
+    # 3. 이 스크립트가 직접 실행될 때만 Flask 개발 서버를 구동합니다.
+    if __name__ == '__main__':
+        # app.config에 저장된 호스트, 포트, 디버그 설정을 사용합니다.
+        app.run(
+            host=app.config.get('HOST'),
+            port=app.config.get('PORT'),
+            debug=app.config.get('DEBUG', False)
+        )
+    ```
+  * `app/__init__.py`: 애플리케이션 팩토리(`create_app`)가 위치하며, 앱의 생성과 설정을 총괄합니다.
+  * `app/core/`: `config.py`, `security.py` 등 프로젝트 전반에 영향을 미치는 핵심 로직을 담습니다.
+  * `app/api/`: 각 기능 도메인별 Blueprint가 위치합니다. 하위 폴더는 `routes.py`, `services.py` 등으로 구성됩니다.
+  * `app/models/`: Firestore에 저장될 데이터의 구조를 `@dataclass`를 이용해 정의합니다.
+  * `app/schemas/`: Marshmallow를 사용해 API 요청/응답 데이터의 유효성을 검증하고 형식을 변환(직렬화)합니다.
+
+-----
+
+### **5. 기술 FAQ: 핵심 개념 상세 해설**
+
+#### **1. 팩토리 패턴(Factory Pattern)이 무엇이며, 우리 프로젝트는 왜 `create_app()` 함수를 사용하나요?**
+
+  * **개념:** 애플리케이션 객체의 생성 및 설정을 하나의 함수 안에 캡슐화하는 디자인 패턴입니다.
+  * **목적:** 순환 참조 방지, 테스트 용이성 향상, 설정의 유연한 주입을 위해 사용합니다.
+  * **단계별 동작 방식:**
+    1.  `create_app` 함수가 호출되면, 비어있는 Flask 앱 객체를 생성합니다.
+    2.  `config_by_name` 딕셔너리를 통해 전달받은 환경 이름(`development`, `testing` 등)에 맞는 설정 클래스를 로드합니다.
+    3.  Firebase 등 공용 서비스를 초기화합니다.
+    4.  `app/api` 폴더에 정의된 모든 블루프린트를 앱에 등록하여 API 엔드포인트를 활성화합니다.
+    5.  모든 설정이 완료된 앱 인스턴스를 반환합니다.
+  * **코드 예시 (`app/__init__.py`)**
+    ```python
+    from flask import Flask
+    from app.core.config import config_by_name # 환경별 설정 클래스 딕셔너리
+    import firebase_admin
+    from firebase_admin import credentials
+
+    def create_app(config_name: str = 'development'):
+        """
+        애플리케이션 팩토리 함수.
+        환경 이름(config_name)을 받아 해당 환경에 맞는 앱 인스턴스를 생성하고 반환합니다.
+        """
+        # --- 1단계: 뼈대 생성 ---
+        # 기본적인 Flask 애플리케이션 객체를 생성합니다.
+        app = Flask(__name__)
+        
+        # --- 2단계: 설정 주입 ---
+        # config_name(예: 'development')에 해당하는 설정 클래스를 찾아 앱에 로드합니다.
+        app.config.from_object(config_by_name[config_name])
+
+        # --- 3단계: 핵심 기능 초기화 ---
+        # Firebase Admin SDK를 초기화합니다. 앱이 여러 번 로드되더라도 중복 초기화되지 않도록 방지합니다.
+        if not firebase_admin._apps:
+            cred_path = app.config['FIREBASE_CREDENTIALS_PATH']
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred)
+        
+        # --- 4단계: 기능 부품 조립 (블루프린트 등록) ---
+        # 각 기능별로 정의된 블루프린트들을 앱에 등록합니다.
+        # 이 시점에 블루프린트를 import하여 순환 참조를 방지합니다.
+        from app.api.auth.routes import auth_bp
+        from app.api.pets.routes import pets_bp
+        
+        # url_prefix를 지정하여 API 엔드포인트의 경로를 설정합니다.
+        # 예: /api/auth, /api/pets
+        app.register_blueprint(auth_bp, url_prefix='/api/auth')
+        app.register_blueprint(pets_bp, url_prefix='/api/pets')
+
+        # --- 5단계: 완성품 반환 ---
+        # 모든 설정과 기능이 조립된 최종 app 객체를 반환합니다.
+        return app
+    ```
+
+#### **2. 애플리케이션의 '인스턴스화'는 무엇을 의미하나요?**
+
+  * **개념:** 클래스(설계도)를 바탕으로, 메모리 상에서 실제 동작하는 객체(인스턴스)를 만드는 과정입니다.
+  * **`app = create_app()` 실행 시 단계별 과정:**
+    1.  **객체 생성:** `app = Flask(__name__)`를 통해 기본 Flask 객체가 메모리에 생성됩니다.
+    2.  **상태 부여:** `app.config.from_object(...)`를 통해 설정값들이 객체의 속성으로 저장됩니다.
+    3.  **능력 부여:** Firebase 등 외부 서비스가 초기화되고, `app` 객체는 외부와 통신할 수 있는 능력을 갖게 됩니다.
+    4.  **기능 확장:** `app.register_blueprint(...)`를 통해 URL과 처리 함수가 매핑된 라우팅 테이블이 구축됩니다.
+
+#### **3. 순환 참조(Circular Import) 문제가 무엇이며, 팩토리 패턴이 어떻게 해결하나요?**
+
+  * **개념:** 두 개 이상의 Python 모듈이 서로를 임포트하여 발생하는 무한 루프 문제입니다.
+  * **문제 발생 시나리오:** 만약 `app` 객체가 전역 변수라면, `routes.py`는 `app`을 임포트하고, `app`은 다시 `routes.py`의 블루프린트를 임포트해야 하므로 순환 참조가 발생합니다.
+  * **팩토리 패턴의 해결 방식:** 객체 생성 시점과 기능 등록 시점을 분리합니다. `create_app` 함수 내에서 `app` 객체를 먼저 생성한 뒤, 나중에 블루프린트를 임포트하여 등록합니다. 이로써 `routes.py`는 더 이상 `app` 객체를 직접 임포트할 필요가 없어지므로 의존성의 고리가 끊어집니다.
+
+#### **4. 동적 설정 주입(Dynamic Configuration)이 무엇인가요?**
+
+  * **개념:** 애플리케이션 실행 시점에 환경(개발, 테스트 등)에 따라 다른 설정값을 적용하는 기법입니다.
+  * **우리 프로젝트 적용 방식:**
+    1.  `app/core/config.py`에 `Config`를 상속받는 `DevelopmentConfig`, `TestingConfig` 등 환경별 설정 클래스를 정의합니다.
+    2.  `create_app(config_name)` 함수는 인자로 받은 `config_name`에 맞는 클래스를 `config_by_name` 딕셔너리에서 찾아 설정을 로드합니다.
+    3.  `run.py`에서는 `os.getenv('FLASK_ENV')`를 통해 환경 이름을 결정하고, `create_app`에 전달하여 해당 환경에 맞는 앱을 실행합니다.
+  * **코드 예시 (`app/core/config.py`)**
+    ```python
+    import os
+    from dotenv import load_dotenv
+
+    # .env 파일의 변수들을 환경 변수로 로드
+    load_dotenv()
+
+    class Config:
+        """기본 설정 (모든 환경에서 공유)"""
+        HOST = os.getenv('FLASK_RUN_HOST', '0.0.0.0')
+        PORT = int(os.getenv('FLASK_RUN_PORT', 5000))
+        JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+        GOOGLE_CLIENT_SECRETS_PATH = os.getenv('GOOGLE_CLIENT_SECRETS_PATH')
+
+    class DevelopmentConfig(Config):
+        """개발 환경 전용 설정"""
+        DEBUG = True
+        FIREBASE_CREDENTIALS_PATH = os.getenv('DEV_FIREBASE_CREDENTIALS_PATH')
+
+    class TestingConfig(Config):
+        """테스트 환경 전용 설정"""
+        TESTING = True
+        DEBUG = False
+        FIREBASE_CREDENTIALS_PATH = os.getenv('TEST_FIREBASE_CREDENTIALS_PATH')
+
+    # 문자열 이름을 실제 설정 클래스와 매핑
+    config_by_name = dict(
+        development=DevelopmentConfig,
+        testing=TestingConfig
+    )
+    ```
+
+#### **5. 블루프린트(Blueprint)란 무엇이며, 어떻게 동작하나요?**
+
+  * **개념:** 거대한 애플리케이션을 기능 단위로 나눈 \*\*'기능별 미니 앱 설계도'\*\*입니다.
+  * **단계별 동작 과정:**
+    1.  **설계도 작성 (`routes.py`):** `pets_bp = Blueprint(...)`로 설계도를 만들고, `@pets_bp.route(...)`로 URL 규칙을 명시합니다.
+    2.  **설계도 제출 (`__init__.py`):** `create_app` 함수 안에서 `from ... import pets_bp`로 설계도를 가져옵니다.
+    3.  **기능 조립 (`__init__.py`):** `app.register_blueprint(pets_bp, ...)`를 통해 설계도의 내용이 실제 앱의 라우팅 테이블에 등록되어 비로소 기능이 활성화됩니다.
+  * **코드 예시**
+      * **`app/api/pets/routes.py` (설계도 작성)**
+        ```python
+        from flask import Blueprint
+
+        # 'pets'라는 이름으로 블루프린트 설계도를 생성합니다.
+        pets_bp = Blueprint('pets', __name__)
+
+        # '/` 경로에 대한 GET 요청 규칙을 설계도에 추가합니다.
+        @pets_bp.route('/', methods=['GET'])
+        def get_all_pets():
+            return "List of all pets"
+        ```
+      * **`app/__init__.py` (기능 조립)**
+        ```python
+        # ... create_app 함수 내부 ...
+
+        # 'pets' 블루프린트 설계도를 가져옵니다.
+        from app.api.pets.routes import pets_bp
+
+        # 설계도를 실제 앱에 등록합니다. 
+        # 이제 /api/pets/ 경로로 오는 요청은 pets_bp가 처리합니다.
+        app.register_blueprint(pets_bp, url_prefix='/api/pets')
+        ```
+
+#### **6. '저수준 비즈니스 로직'이란 무엇이며, `services` 폴더의 역할은 무엇인가요?**
+
+  * **개념:**
+      * **저수준 로직:** \*\*'어떻게'\*\*에 집중하며, 기술적인 세부사항을 다룹니다. (예: DB에 데이터 쓰기)
+      * **고수준 로직:** \*\*'무엇을'\*\*에 집중하며, 실제 비즈니스 정책을 다룹니다. (예: "사용자 등급에 따라 글쓰기 권한 부여")
+  * **`services` 폴더의 역할:** 우리 프로젝트에서 `app/services/`는 여러 기능에서 공통으로 사용하는 저수준의 공유 인프라 서비스를 정의합니다. 예를 들어, `firebase_service.py`는 'pets'나 'users' 도메인을 전혀 모른 채, 오직 "Firestore의 특정 컬렉션에 문서를 생성하라"는 기술적인 명령만 수행합니다.
+  * **코드 예시 (`app/services/firebase_service.py`)**
+    ```python
+    from firebase_admin import firestore
+
+    # Firestore 클라이언트 인스턴스를 가져옵니다.
+    db = firestore.client()
+
+    def create_document(collection_name: str, data: dict) -> str:
+        """
+        [저수준 함수] 특정 컬렉션에 데이터를 받아 문서를 생성합니다.
+        - 이 함수는 '무엇을' 저장하는지(user, pet 등) 전혀 관심이 없습니다.
+        - 오직 '어떻게' Firestore에 저장하는지에 대한 기술만 알고 있습니다.
+        """
+        # 1. 컬렉션 이름과 데이터라는 기술적인 파라미터를 받습니다.
+        # 2. Firestore 클라이언트를 사용해 문서를 추가하는 기술적인 작업을 수행합니다.
+        update_time, doc_ref = db.collection(collection_name).add(data)
+        
+        # 3. 생성된 문서의 ID(기술적 결과)를 반환합니다.
+        return doc_ref.id
+    ```
+
+#### **7. `/models` 디렉토리와 '데이터의 영속적인 구조'는 무엇을 의미하나요?**
+
+  * **개념:**
+      * **컬렉션/필드:** Firestore에서 '컬렉션'은 문서들의 그룹(테이블과 유사), '필드'는 문서 내의 데이터 항목(컬럼과 유사)을 의미합니다.
+      * **'필드를 클래스로 정의':** 데이터베이스가 스키마를 강제하지 않더라도, 코드 수준에서 데이터 구조의 일관성을 유지하기 위한 약속입니다. 우리 프로젝트는 `@dataclass` 사용을 표준으로 합니다.
+      * **영속적인 구조:** 애플리케이션이 꺼져도 데이터베이스에 계속 유지되는 데이터의 구조를 의미하며, `app/models`의 데이터 클래스가 이를 표현합니다.
+  * **코드 예시 (`app/models/pet.py`)**
+    ```python
+    from dataclasses import dataclass
+    from datetime import date
+
+    # @dataclass 데코레이터는 __init__, __repr__ 등 boilerplate 코드를 자동으로 생성해줍니다.
+    @dataclass
+    class Pet:
+        """
+        Firestore의 'pets' 컬렉션에 저장될 문서의 '영속적인 구조'를
+        Python 코드로 명확하게 정의하는 클래스입니다.
+        """
+        # --- 필드 정의 ---
+        # 이 클래스의 속성들은 Firestore 문서의 필드(key)에 해당합니다.
+        id: str           # 문서의 고유 ID (Firestore에서 자동 생성)
+        owner_id: str     # 반려동물 주인의 사용자 ID
+        name: str         # 반려동물 이름
+        breed: str        # 품종
+        birth_date: date  # 생년월일
+    ```
+
+#### **8. `/schemas`에서 요청/응답 데이터 구조를 어떻게 정의하나요?**
+
+  * **개념:** API를 통해 클라이언트와 서버가 데이터를 주고받을 때의 \*\*'공식적인 데이터 양식'\*\*을 정의하고 유효성을 검사합니다.
+  * **단계별 적용 방식:**
+    1.  **요청(Request) 구조 정의:** `load_only=True` 옵션을 사용하여, 서버가 요청을 받을 때만 유효한 필드를 정의합니다. (예: `owner_id`)
+    2.  **응답(Response) 구조 정의:** `dump_only=True` 옵션을 사용하여, 서버가 응답을 보낼 때만 포함될 필드를 정의합니다. (예: 데이터베이스에서 생성된 `id`)
+    3.  **인스턴스화:** 스키마 객체는 모듈 레벨에서 한 번만 생성하여 재사용하는 것을 표준으로 합니다. (`pet_schema = PetSchema()`)
+  * **코드 예시 (`app/schemas/pet_schema.py`)**
+    ```python
+    from marshmallow import Schema, fields
+
+    class PetSchema(Schema):
+        """
+        Pet 데이터의 유효성 검증 및 직렬화를 위한 스키마.
+        API의 요청/응답 데이터 구조를 정의합니다.
+        """
+        # --- 필드 정의 ---
+        
+        # dump_only=True: '직렬화(dump)' 시에만, 즉 서버가 클라이언트로 '응답'할 때만 포함됩니다.
+        # DB에서 자동 생성된 id를 클라이언트에게 보여주기 위해 사용합니다.
+        id = fields.Str(dump_only=True) 
+        
+        # required=True: '역직렬화(load)' 시에, 즉 서버가 클라이언트의 '요청'을 받을 때 필수입니다.
+        # 이 필드가 없으면 유효성 검사 에러가 발생합니다.
+        name = fields.Str(required=True)
+        breed = fields.Str(required=True)
+        birth_date = fields.Date(format='iso', required=True)
+        
+        # load_only=True: '역직렬화(load)' 시에만, 즉 서버가 '요청'을 받을 때만 허용됩니다.
+        # JWT 토큰 등 내부적으로 처리할 값을 받을 때 사용하며, '응답'에는 포함되지 않아 정보 노출을 막습니다.
+        owner_id = fields.Str(load_only=True)
+    ```
+
+#### **9. Marshmallow 라이브러리와 데이터 직렬화/역직렬화는 무엇인가요?**
+
+  * **개념:**
+      * **Marshmallow:** 파이썬 객체와 JSON 같은 외부 데이터 형식 간의 변환 및 유효성 검증을 위한 라이브러리입니다.
+      * **역직렬화 (Deserialization):** 외부 데이터(JSON) -\> 내부 객체(Python Dict). 클라이언트 요청을 서버가 이해할 수 있는 형태로 바꾸고 유효성을 검증합니다. (`.load()` 메소드 사용)
+      * **직렬화 (Serialization):** 내부 객체(Python Dict) -\> 외부 데이터(JSON). 서버의 데이터를 클라이언트가 사용할 수 있는 형태로 가공하고 포맷팅합니다. (`.dump()` 메소드 사용)
+  * **예시:** API 응답 시, `.dump()` 메소드는 Firestore의 Timestamp 객체를 ISO 형식의 날짜 문자열로 변환하고, `load_only=True`로 설정된 필드(`owner_id` 등)는 결과에서 자동으로 제외하여 깨끗한 JSON을 만듭니다.
+  * **코드 예시 (요청 처리 및 응답 반환 과정)**
+    ```python
+    # app/api/pets/routes.py (일부)
+    from flask import request, jsonify, g
+    from marshmallow import ValidationError
+    from app.schemas.pet_schema import PetSchema
+
+    # --- 표준: 스키마 인스턴스를 모듈 레벨에서 생성 ---
+    pet_schema = PetSchema()
+
+    @pets_bp.route('/', methods=['POST'])
+    @jwt_required # JWT 인증이 필요한 라우트
+    def create_pet():
+        # 1. 클라이언트가 보낸 JSON 요청 본문을 가져옵니다.
+        json_data = request.get_json()
+
+        try:
+            # --- 2. 역직렬화 (Deserialization) ---
+            # .load() 메소드로 JSON 데이터를 Python 딕셔너리로 변환하고 유효성을 검사합니다.
+            # 'name', 'breed', 'birth_date'가 없으면 여기서 ValidationError 발생
+            validated_data = pet_schema.load(json_data)
+            
+            # 3. 인증된 사용자의 ID를 가져옵니다. (@jwt_required가 g.user에 저장)
+            owner_id = g.user['user_id']
+            
+            # 4. 서비스 계층에 비즈니스 로직 처리를 위임합니다.
+            #    (실제로는 pet_services.register_pet(...) 와 같은 함수를 호출합니다.)
+            new_pet_object = {"id": "new_db_id_123", "owner_id": owner_id, **validated_data}
+            
+            # --- 5. 직렬화 (Serialization) ---
+            # .dump() 메소드로 Python 객체를 클라이언트에게 보낼 JSON 형식으로 변환합니다.
+            # - 'id' 필드가 추가됩니다 (dump_only=True)
+            # - 'owner_id' 필드가 제거됩니다 (load_only=True)
+            # - 'birth_date' 객체가 "YYYY-MM-DD" 문자열로 변환됩니다.
+            response_data = pet_schema.dump(new_pet_object)
+
+            # 6. 최종 JSON 응답을 반환합니다.
+            return jsonify(response_data), 201
+
+        except ValidationError as err:
+            # 유효성 검사 실패 시 에러 메시지를 반환합니다.
+            return jsonify(err.messages), 400
+    ```
