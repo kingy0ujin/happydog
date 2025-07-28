@@ -39,6 +39,7 @@
 
     ```bash
     conda activate pet_project_backend
+    -> conda activate pet-backend
     ```
 
 ##### **2.3. 비밀 파일 설정 (`.env` 및 `secrets`)**
